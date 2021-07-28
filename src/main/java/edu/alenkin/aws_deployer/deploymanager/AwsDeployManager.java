@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author Alenkin Andrew
@@ -19,7 +21,7 @@ import java.io.IOException;
  */
 @Service
 @Slf4j
-public class AwsDeployManager implements DeployManager{
+public class AwsDeployManager implements DeployManager {
 
     @Autowired
     private ZipService zipService;
@@ -29,6 +31,8 @@ public class AwsDeployManager implements DeployManager{
 
     @Autowired
     FileService fileService;
+
+    private final static ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     public UploadFileResponse upload(MultipartFile archive) throws ValidationException, IOException {
@@ -40,16 +44,23 @@ public class AwsDeployManager implements DeployManager{
             clearTmpDir();
             throw new ValidationException("Project is invalid! It must contains well-formed Dockerfile and pom.xml!");
         } else {
-           String fileUri =  push(project);
-           log.debug("Successfully pushed {}", projectName);
-            return new UploadFileResponse(projectName, fileUri, projectName, project.getSize());
+            String fileUri = push(project);
+            log.debug("Successfully pushed {}", projectName);
+            UploadFileResponse result = new UploadFileResponse(projectName, fileUri, projectName, project.getSize());
+            executor.execute(this::clearTmpDir);
+            return result;
         }
     }
 
     private void clearTmpDir() {
         log.debug("Clear temp directory on server");
-        fileService.clearStorageDir();
-
+        log.info("Temp directory clearing is started");
+        try {
+            fileService.clearStorageDir();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        log.info("Temporary directory is clear!");
     }
 
     private Project unZip(MultipartFile archive) throws IOException {

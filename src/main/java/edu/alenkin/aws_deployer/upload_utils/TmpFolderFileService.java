@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 /**
@@ -65,8 +66,8 @@ public class TmpFolderFileService implements FileService {
     }
 
     @Override
-    @SneakyThrows
-    public void clearStorageDir() {
-        FileUtils.cleanDirectory(new File(fileProperties.getUploadDir()));
+    public void clearStorageDir() throws IOException {
+        String tmpDir = fileProperties.getUploadDir();
+        FileUtils.deleteDirectory(new File(tmpDir));
     }
 }

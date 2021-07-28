@@ -11,5 +11,5 @@ import java.io.IOException;
 public interface FileService {
     boolean isFilesExists(Project project, String... fileName) throws IOException;
 
-    void clearStorageDir();
+    void clearStorageDir() throws IOException;
 }
