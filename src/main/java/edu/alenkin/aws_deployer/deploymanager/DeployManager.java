@@ -4,10 +4,12 @@ import edu.alenkin.aws_deployer.ValidationException;
 import edu.alenkin.aws_deployer.upload_utils.UploadFileResponse;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 /**
  * @author Alenkin Andrew
  * oxqq@ya.ru
  */
 public interface DeployManager {
-    UploadFileResponse upload(MultipartFile archive) throws ValidationException;
+    UploadFileResponse upload(MultipartFile archive) throws ValidationException, IOException;
 }

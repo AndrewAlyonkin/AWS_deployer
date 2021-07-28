@@ -38,7 +38,7 @@ public class AppController {
             response = manager.upload(archive);
             log.debug("Succesfuly uploaded {}", response.getFileName());
             return ResponseEntity.ok(response);
-        } catch (ValidationException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e);
         }
     }

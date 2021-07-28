@@ -46,7 +46,7 @@ public class ZipServiceImpl implements ZipService {
             } else {
                 Files.createDirectories(resolvedPath);
             }
-            
+
         }
 
         return new Project(projectDir, path, Files.size(path));

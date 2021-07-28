@@ -4,10 +4,13 @@ import edu.alenkin.aws_deployer.ValidationException;
 import edu.alenkin.aws_deployer.entity.Project;
 import edu.alenkin.aws_deployer.upload_utils.UploadFileResponse;
 import edu.alenkin.aws_deployer.upload_utils.ZipService;
+import edu.alenkin.aws_deployer.validation_utils.ValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  * @author Alenkin Andrew
@@ -20,12 +23,14 @@ public class AwsDeployManager implements DeployManager{
     @Autowired
     private ZipService zipService;
 
+    @Autowired
+    ValidationService validationService;
+
     @Override
-    public UploadFileResponse upload(MultipartFile archive) throws ValidationException {
+    public UploadFileResponse upload(MultipartFile archive) throws ValidationException, IOException {
         Project project = unZip(archive);
-        String archiveName = archive.getName();
-        log.debug("Archive for {} successfully unpacked", archiveName);
         String projectName = project.getName();
+        log.debug("Archive for {} successfully unpacked", projectName);
         if (!isValid(project)) {
             log.error("Project {} is invalid", project.getName());
             clearTmpDir();
@@ -33,7 +38,7 @@ public class AwsDeployManager implements DeployManager{
         } else {
            String fileUri =  push(project);
            log.debug("Successfully pushed {}", projectName);
-            return new UploadFileResponse(projectName, fileUri, archiveName, project.getSize());
+            return new UploadFileResponse(projectName, fileUri, projectName, project.getSize());
         }
     }
 
@@ -42,12 +47,12 @@ public class AwsDeployManager implements DeployManager{
 
     }
 
-    private Project unZip(MultipartFile archive) {
-        return null;
+    private Project unZip(MultipartFile archive) throws IOException {
+        return zipService.unzip(archive);
     }
 
     private boolean isValid(Project project) {
-        return false;
+        return validationService.isValid(project);
     }
 
     private String push(Project project) {
