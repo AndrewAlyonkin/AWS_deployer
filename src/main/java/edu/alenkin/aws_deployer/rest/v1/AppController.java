@@ -36,6 +36,7 @@ public class AppController {
             log.info("Succesfuly uploaded {}", response.getFileName());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e);
         }
     }

@@ -46,6 +46,7 @@ public class TmpFolderFileService implements FileService {
                     log.info("Project path and name is changed to {} and {}", folder, folder.getFileName().toFile().getName());
                     project.setPath(folder);
                     project.setName(folder.getFileName().toFile().getName());
+                    project.setSize((int) FileUtils.sizeOfDirectory(folder.toFile()));
                     return true;
                 }
             }

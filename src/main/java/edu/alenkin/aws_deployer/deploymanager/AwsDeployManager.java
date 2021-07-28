@@ -1,6 +1,7 @@
 package edu.alenkin.aws_deployer.deploymanager;
 
 import edu.alenkin.aws_deployer.ValidationException;
+import edu.alenkin.aws_deployer.deploy.AwsPushService;
 import edu.alenkin.aws_deployer.entity.Project;
 import edu.alenkin.aws_deployer.upload_utils.FileService;
 import edu.alenkin.aws_deployer.upload_utils.UploadFileResponse;
@@ -31,6 +32,9 @@ public class AwsDeployManager implements DeployManager {
 
     @Autowired
     FileService fileService;
+
+    @Autowired
+    AwsPushService awsPushService;
 
     private final static ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -64,15 +68,19 @@ public class AwsDeployManager implements DeployManager {
     }
 
     private Project unZip(MultipartFile archive) throws IOException {
+        log.info("{} extracting", archive.getOriginalFilename());
         return zipService.unzip(archive);
     }
 
     private boolean isValid(Project project) throws IOException {
+        log.info("{} validation", project.getName());
         return validationService.isValid(project);
     }
 
     private String push(Project project) {
-        return null;
+        log.info("{} pushing to Amazon", project.getName());
+        return awsPushService.push(project);
+
     }
 
 }

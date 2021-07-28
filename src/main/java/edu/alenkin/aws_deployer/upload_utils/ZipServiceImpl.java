@@ -3,6 +3,7 @@ package edu.alenkin.aws_deployer.upload_utils;
 import edu.alenkin.aws_deployer.entity.Project;
 import edu.alenkin.aws_deployer.properties.FileStorageProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,6 +48,6 @@ public class ZipServiceImpl implements ZipService {
 
         }
 
-        return new Project(projectDir, path, Files.size(path));
+        return new Project(projectDir, path, FileUtils.sizeOfDirectory(path.toFile()));
     }
 }
