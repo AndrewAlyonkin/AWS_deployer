@@ -2,6 +2,7 @@ package edu.alenkin.aws_deployer.deploymanager;
 
 import edu.alenkin.aws_deployer.ValidationException;
 import edu.alenkin.aws_deployer.entity.Project;
+import edu.alenkin.aws_deployer.upload_utils.FileService;
 import edu.alenkin.aws_deployer.upload_utils.UploadFileResponse;
 import edu.alenkin.aws_deployer.upload_utils.ZipService;
 import edu.alenkin.aws_deployer.validation_utils.ValidationService;
@@ -26,6 +27,9 @@ public class AwsDeployManager implements DeployManager{
     @Autowired
     ValidationService validationService;
 
+    @Autowired
+    FileService fileService;
+
     @Override
     public UploadFileResponse upload(MultipartFile archive) throws ValidationException, IOException {
         Project project = unZip(archive);
@@ -43,7 +47,8 @@ public class AwsDeployManager implements DeployManager{
     }
 
     private void clearTmpDir() {
-        log.debug("Clear tem directory on server");
+        log.debug("Clear temp directory on server");
+        fileService.clearStorageDir();
 
     }
 
@@ -51,7 +56,7 @@ public class AwsDeployManager implements DeployManager{
         return zipService.unzip(archive);
     }
 
-    private boolean isValid(Project project) {
+    private boolean isValid(Project project) throws IOException {
         return validationService.isValid(project);
     }
 

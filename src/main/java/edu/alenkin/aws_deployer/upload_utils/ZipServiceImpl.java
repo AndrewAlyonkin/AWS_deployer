@@ -27,18 +27,16 @@ public class ZipServiceImpl implements ZipService {
 
     @Override
     public Project unzip(MultipartFile archive) throws IOException {
-        log.debug("Trying to unzip {}", archive.getName());
-        archive.getSize();
-        archive.getName();
+        log.info("Trying to unzip {}", archive.getName());
         ZipInputStream inputStream = new ZipInputStream(archive.getInputStream());
 
-        String projectDir = archive.getName();
+        String projectDir = archive.getOriginalFilename().replace(".zip", "");
         Path path = Paths.get(fileProperties.getUploadDir()).resolve(projectDir);
-        log.debug("Destination path - {}", path);
+        log.info("Destination path - {}", path);
 
         for (ZipEntry entry; (entry = inputStream.getNextEntry()) != null; ) {
             Path resolvedPath = path.resolve(entry.getName());
-            log.debug("Resolved path - {}", resolvedPath);
+            log.info("Resolved path - {}", resolvedPath);
 
             if (!entry.isDirectory()) {
                 Files.createDirectories(resolvedPath.getParent());
