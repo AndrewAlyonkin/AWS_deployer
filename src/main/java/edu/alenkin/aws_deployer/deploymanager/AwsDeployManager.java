@@ -2,12 +2,12 @@ package edu.alenkin.aws_deployer.deploymanager;
 
 import edu.alenkin.aws_deployer.ValidationException;
 import edu.alenkin.aws_deployer.entity.Project;
-import edu.alenkin.aws_deployer.uploadutils.UploadFileResponse;
+import edu.alenkin.aws_deployer.upload_utils.UploadFileResponse;
+import edu.alenkin.aws_deployer.upload_utils.ZipService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.zip.ZipFile;
 
 /**
  * @author Alenkin Andrew
@@ -17,9 +17,12 @@ import java.util.zip.ZipFile;
 @Slf4j
 public class AwsDeployManager implements DeployManager{
 
+    @Autowired
+    private ZipService zipService;
+
     @Override
     public UploadFileResponse upload(MultipartFile archive) throws ValidationException {
-        Project project = unpackage(archive);
+        Project project = unZip(archive);
         String archiveName = archive.getName();
         log.debug("Archive for {} successfully unpacked", archiveName);
         String projectName = project.getName();
@@ -39,7 +42,7 @@ public class AwsDeployManager implements DeployManager{
 
     }
 
-    private Project unpackage(MultipartFile archive) {
+    private Project unZip(MultipartFile archive) {
         return null;
     }
 

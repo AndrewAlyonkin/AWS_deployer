@@ -1,4 +1,4 @@
-package edu.alenkin.aws_deployer.uploadutils;
+package edu.alenkin.aws_deployer.upload_utils;
 
 /**
  * @author Alenkin Andrew

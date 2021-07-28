@@ -1,13 +1,21 @@
 package edu.alenkin.aws_deployer.entity;
 
+import java.nio.file.Path;
+
 /**
  * @author Alenkin Andrew
  * oxqq@ya.ru
  */
 public class Project {
     private String name;
-    private String path;
-    private int size;
+    private Path path;
+    private long size;
+
+    public Project(String name, Path path, long size) {
+        this.name = name;
+        this.path = path;
+        this.size = size;
+    }
 
     public String getName() {
         return name;
@@ -17,15 +25,15 @@ public class Project {
         this.name = name;
     }
 
-    public String getPath() {
+    public Path getPath() {
         return path;
     }
 
-    public void setPath(String path) {
+    public void setPath(Path path) {
         this.path = path;
     }
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 
