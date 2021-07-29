@@ -1,12 +1,8 @@
 package edu.alenkin.aws_deployer.upload_utils;
 
 import edu.alenkin.aws_deployer.entity.Project;
-import edu.alenkin.aws_deployer.properties.FileStorageProperties;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,25 +10,32 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 /**
  * @author Alenkin Andrew
  * oxqq@ya.ru
+ * <p>
+ * The base implementation of {@link FileService}.
+ * Stores project files in temporary folder on server file system.
+ * Searches project directory in files tree no more than 1 nesting depth.
  */
 @Service
 @Slf4j
 public class TmpFolderFileService implements FileService {
 
-    @Autowired
-    private FileStorageProperties fileProperties;
+    private final String uploadDir;
+
+    public TmpFolderFileService(@Value("${file.upload-dir}") String uploadDir) {
+        this.uploadDir = uploadDir;
+    }
 
     @Override
     public boolean isFilesExists(Project project, String... fileName) throws IOException {
         Path projectPath = project.getPath();
 
         if (findFiles(projectPath, fileName)) {
+            log.info("Required files is successfully found!");
             return true;
         } else {
 
@@ -51,7 +54,7 @@ public class TmpFolderFileService implements FileService {
                 }
             }
         }
-
+        log.info("Required files is absent!");
         return false;
     }
 
@@ -68,7 +71,6 @@ public class TmpFolderFileService implements FileService {
 
     @Override
     public void clearStorageDir() throws IOException {
-        String tmpDir = fileProperties.getUploadDir();
-        FileUtils.deleteDirectory(new File(tmpDir));
+        FileUtils.deleteDirectory(new File(uploadDir));
     }
 }

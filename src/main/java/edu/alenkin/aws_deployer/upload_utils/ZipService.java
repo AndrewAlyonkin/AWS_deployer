@@ -10,6 +10,8 @@ import java.io.IOException;
 /**
  * @author Alenkin Andrew
  * oxqq@ya.ru
+ *
+ * Unpacks received with HTTP request zip-archive.
  */
 @Service
 public interface ZipService {

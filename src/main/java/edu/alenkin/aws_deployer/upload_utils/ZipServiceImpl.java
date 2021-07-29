@@ -1,10 +1,9 @@
 package edu.alenkin.aws_deployer.upload_utils;
 
 import edu.alenkin.aws_deployer.entity.Project;
-import edu.alenkin.aws_deployer.properties.FileStorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,16 +22,20 @@ import java.util.zip.ZipInputStream;
 @Slf4j
 public class ZipServiceImpl implements ZipService {
 
-    @Autowired
-    private FileStorageProperties fileProperties;
+    private final String uploadDir;
+
+    public ZipServiceImpl(@Value("${file.upload-dir}") String uploadDir) {
+        this.uploadDir = uploadDir;
+    }
 
     @Override
     public Project unzip(MultipartFile archive) throws IOException {
-        log.info("Trying to unzip {}", archive.getName());
+        String projectDir = archive.getOriginalFilename().replace(".zip", "");
+        log.info("Trying to unzip {}", projectDir);
+
         ZipInputStream inputStream = new ZipInputStream(archive.getInputStream());
 
-        String projectDir = archive.getOriginalFilename().replace(".zip", "");
-        Path path = Paths.get(fileProperties.getUploadDir()).resolve(projectDir);
+        Path path = Paths.get(uploadDir).resolve(projectDir);
         log.info("Destination path - {}", path);
 
         for (ZipEntry entry; (entry = inputStream.getNextEntry()) != null; ) {
@@ -45,9 +48,7 @@ public class ZipServiceImpl implements ZipService {
             } else {
                 Files.createDirectories(resolvedPath);
             }
-
         }
-
         return new Project(projectDir, path, FileUtils.sizeOfDirectory(path.toFile()));
     }
 }

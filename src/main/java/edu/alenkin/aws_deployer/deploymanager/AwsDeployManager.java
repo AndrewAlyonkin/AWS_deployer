@@ -1,6 +1,6 @@
 package edu.alenkin.aws_deployer.deploymanager;
 
-import edu.alenkin.aws_deployer.ValidationException;
+import edu.alenkin.aws_deployer.exceptions.ValidationException;
 import edu.alenkin.aws_deployer.deploy.AwsPushService;
 import edu.alenkin.aws_deployer.entity.Project;
 import edu.alenkin.aws_deployer.upload_utils.FileService;
@@ -19,6 +19,9 @@ import java.util.concurrent.Executors;
 /**
  * @author Alenkin Andrew
  * oxqq@ya.ru
+ * <p>
+ * The basic implementation of {@link DeployManager}. Unpacks archive, received vith HTTP request, validates it
+ * and deploys to Amazon Web Services infrastructure.
  */
 @Service
 @Slf4j
@@ -36,51 +39,56 @@ public class AwsDeployManager implements DeployManager {
     @Autowired
     AwsPushService awsPushService;
 
-    private final static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
-    public UploadFileResponse upload(MultipartFile archive) throws ValidationException, IOException {
-        Project project = unZip(archive);
-        String projectName = project.getName();
-        log.debug("Archive for {} successfully unpacked", projectName);
-        if (!isValid(project)) {
-            log.error("Project {} is invalid", project.getName());
-            clearTmpDir();
-            throw new ValidationException("Project is invalid! It must contains well-formed Dockerfile and pom.xml!");
-        } else {
-            String fileUri = push(project);
-            log.debug("Successfully pushed {}", projectName);
-            UploadFileResponse result = new UploadFileResponse(projectName, fileUri, projectName, project.getSize());
+    public UploadFileResponse upload(MultipartFile archive) throws ValidationException, IOException, InterruptedException {
+        String archiveName = archive.getName();
+        try {
+
+            // Unpacking phase
+            log.info("{} extracting", archiveName);
+            Project project = zipService.unzip(archive);
+            String projectName = project.getName();
+            log.debug("Archive for {} successfully unpacked", projectName);
+
+            // Validation phase
+            log.info("{} validation", projectName);
+            if (!validationService.isValid(project)) {
+                log.error("Project {} is invalid", projectName);
+                throw new ValidationException("Project is invalid! It must contains well-formed Dockerfile and pom.xml!");
+            } else {
+
+                // Deploying phase
+                log.info("{} pushing to server", projectName);
+                String fileUri = awsPushService.push(project);
+                log.debug("Successfully pushed {}", projectName);
+
+                return UploadFileResponse.createResponse()
+                        .withProjectName(projectName)
+                        .withUrl(fileUri)
+                        .fromArchiveNamed(archiveName)
+                        .withSize(project.getSize());
+            }
+
+        } finally {
+            // tmp folder clearing phase
+            // tmp folder will be cleaned up in a background process
             executor.execute(this::clearTmpDir);
-            return result;
         }
     }
 
+    /**
+     * Clear temporary folder with the project on server file system
+     */
     private void clearTmpDir() {
-        log.debug("Clear temp directory on server");
         log.info("Temp directory clearing is started");
         try {
             fileService.clearStorageDir();
+            log.info("Temporary directory is cleared!");
         } catch (IOException e) {
             e.printStackTrace();
+            log.error("Failed to clear tmp directory with: {}", e.getMessage());
         }
-        log.info("Temporary directory is clear!");
     }
-
-    private Project unZip(MultipartFile archive) throws IOException {
-        log.info("{} extracting", archive.getOriginalFilename());
-        return zipService.unzip(archive);
-    }
-
-    private boolean isValid(Project project) throws IOException {
-        log.info("{} validation", project.getName());
-        return validationService.isValid(project);
-    }
-
-    private String push(Project project) {
-        log.info("{} pushing to Amazon", project.getName());
-        return awsPushService.push(project);
-
-    }
-
 }

@@ -1,4 +1,4 @@
-package edu.alenkin.aws_deployer;
+package edu.alenkin.aws_deployer.exceptions;
 
 /**
  * @author Alenkin Andrew
