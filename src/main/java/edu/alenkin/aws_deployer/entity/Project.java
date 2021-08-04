@@ -20,4 +20,5 @@ public class Project {
     private String name;
     private Path path;
     private long size;
+    private boolean pathChanged;
 }

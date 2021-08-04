@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -58,11 +60,24 @@ public class AwsDeployManager implements DeployManager {
                 log.error("Project {} is invalid", projectName);
                 throw new ValidationException("Project is invalid! It must contains well-formed Dockerfile and pom.xml!");
             } else {
+                //put a buildspec
+                Path buildSpecPath = fileService.putBuildSpec(project);
+
+                log.info("buildspec.yml pushed to {}", buildSpecPath);
+
+//                // zip project
+//                File projectZip = zipService.zip(project);
+//                String projectZipName = projectZip.getName();
 
                 // Deploying phase
                 log.info("{} pushing to server", projectName);
                 String fileUri = awsPushService.push(project);
                 log.debug("Successfully pushed {}", projectName);
+
+                // delete project zip file
+//                log.info("Deleting {}", projectZipName);
+//                fileService.deleteFile(projectZip);
+//                log.info("{} successfully deleted", projectZipName);
 
                 return UploadFileResponse.createResponse()
                         .withProjectName(projectName)

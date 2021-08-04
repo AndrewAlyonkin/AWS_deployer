@@ -2,11 +2,13 @@ package edu.alenkin.aws_deployer.upload_utils;
 
 import edu.alenkin.aws_deployer.entity.Project;
 import lombok.extern.slf4j.Slf4j;
+import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,6 +51,13 @@ public class ZipServiceImpl implements ZipService {
                 Files.createDirectories(resolvedPath);
             }
         }
-        return new Project(projectDir, path, FileUtils.sizeOfDirectory(path.toFile()));
+        return new Project(projectDir, path, FileUtils.sizeOfDirectory(path.toFile()), false);
+    }
+
+    @Override
+    public File zip(Project project) throws IOException {
+        net.lingala.zip4j.ZipFile zip = new net.lingala.zip4j.ZipFile(project.getName()+".zip");
+        zip.addFolder(project.getPath().toFile());
+        return zip.getFile();
     }
 }

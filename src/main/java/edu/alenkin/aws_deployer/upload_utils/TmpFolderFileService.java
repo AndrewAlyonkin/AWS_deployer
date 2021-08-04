@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 /**
@@ -25,9 +26,12 @@ import java.util.stream.Collectors;
 public class TmpFolderFileService implements FileService {
 
     private final String uploadDir;
+    private final String buildspecPath;
 
-    public TmpFolderFileService(@Value("${file.upload-dir}") String uploadDir) {
+    public TmpFolderFileService(@Value("${file.upload-dir}") String uploadDir,
+                                @Value("${file.buildspec-path}") String buildspecPath) {
         this.uploadDir = uploadDir;
+        this.buildspecPath = buildspecPath;
     }
 
     @Override
@@ -50,6 +54,7 @@ public class TmpFolderFileService implements FileService {
                     project.setPath(folder);
                     project.setName(folder.getFileName().toFile().getName());
                     project.setSize((int) FileUtils.sizeOfDirectory(folder.toFile()));
+                    project.setPathChanged(true);
                     return true;
                 }
             }
@@ -72,5 +77,15 @@ public class TmpFolderFileService implements FileService {
     @Override
     public void clearStorageDir() throws IOException {
         FileUtils.deleteDirectory(new File(uploadDir));
+    }
+
+    @Override
+    public void deleteFile(File file) throws IOException {
+        FileUtils.delete(file);
+    }
+
+    @Override
+    public Path putBuildSpec(Project project) throws IOException {
+       return Files.copy(Paths.get(buildspecPath), project.getPath().resolve("buildspec.yml"));
     }
 }

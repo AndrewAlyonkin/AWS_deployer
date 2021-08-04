@@ -5,9 +5,12 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.Upload;
 import edu.alenkin.aws_deployer.entity.Project;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,8 +34,8 @@ public class AwsPushService implements PushService {
 
     private final AmazonS3 s3client;
 
-    @Value("${AWS.bucketPrefix}")
-    private String bucketPrefix;
+    @Value("${AWS.bucket}")
+    private String bucket;
 
     //to make the bucket names unique, the current date and time will be added to them
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM-HH.mm-");
@@ -55,20 +58,29 @@ public class AwsPushService implements PushService {
     public String push(Project project) throws InterruptedException {
         String projectName = project.getName();
         log.info("Pushing {} to S3", projectName);
-        String bucketName = (LocalDateTime.now().format(formatter) + bucketPrefix
-                + "." + project.getName()).toLowerCase(Locale.ROOT);
+//        String bucketName = (LocalDateTime.now().format(formatter) + bucketPrefix
+//                + "." + project.getName()).toLowerCase(Locale.ROOT);
 
-        s3client.createBucket(bucketName);
+//        s3client.createBucket(bucketName);
         TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3client).build();
 
         File uploadedFile = project.getPath().toFile();
 
-        MultipleFileUpload upload = transferManager.uploadDirectory(bucketName, projectName, uploadedFile, true);
+        MultipleFileUpload upload = transferManager.uploadDirectory(bucket, projectName, uploadedFile, true);
 
         log.info("Uploading {} to S3 in progress", projectName);
         upload.waitForCompletion();
         log.info("Uploading {} to S3 completed", projectName);
 
-        return s3client.getUrl(bucketName, upload.getKeyPrefix()).toString();
+        return s3client.getUrl(bucket, upload.getKeyPrefix()).toString();
+    }
+
+    @Override
+    public String pushFile(File file) throws InterruptedException {
+        String fileName = file.getName();
+        TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3client).build();
+        Upload upload = transferManager.upload(bucket, fileName, file);
+        upload.waitForCompletion();
+        return s3client.getUrl(bucket, fileName).toString();
     }
 }

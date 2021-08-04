@@ -1,0 +1,41 @@
+version: 0.2
+
+env:
+  variables:
+    REPOSITORY_URI: public.ecr.aws/l6n7r4e4/app
+    DOCKERHUB_USERNAME: oxqqqq
+    DOCKERHUB_PASSWORD: 
+    AWS_DEFAULT_REGION: us-east-1
+    IMAGE_TAG: latest
+    AWS_ACCOUNT_ID: 015333577430
+
+phases:
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - echo $REPOSITORY_URI
+      - echo $IMAGE_TAG
+      - echo $AWS_REGION
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr-public get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin public.ecr.aws/l6n7r4e4
+      - echo logging in docker hub
+      - docker login --username $DOCKERHUB_USERNAME --password $DOCKERHUB_PASSWORD
+  build:
+    on-failure: ABORT
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    on-failure: ABORT
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"app","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json

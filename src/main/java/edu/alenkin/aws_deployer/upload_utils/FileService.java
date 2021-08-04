@@ -2,7 +2,9 @@ package edu.alenkin.aws_deployer.upload_utils;
 
 import edu.alenkin.aws_deployer.entity.Project;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * @author Alenkin Andrew
@@ -29,4 +31,17 @@ public interface FileService {
      * @throws IOException
      */
     void clearStorageDir() throws IOException;
+
+    /**
+     * Put default buildspec.yml file to the project directory
+     * @param project
+     */
+    Path putBuildSpec(Project project) throws IOException;
+
+    /**
+     * Delete passed file
+     * @param file
+     * @throws IOException
+     */
+    void deleteFile(File file) throws IOException;
 }
